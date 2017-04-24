@@ -1,0 +1,95 @@
+- name: Install ARA pre-requisites
+  yum:
+    name:
+      - ansible
+      - MySQL-python
+    state: present
+    enablerepo: epel
+
+- name: Install PIP
+  yum:
+    name: python2-pip
+    state: present
+    enablerepo: epel
+  register: _pip
+
+- name: Upgrade pip
+  shell:
+      pip install pip --upgrade
+  when: _pip|changed
+
+- name: Install build requisities
+  yum:
+    name:
+        - gcc
+        - python2-devel
+        - openssl-devel
+    enablerepo: epel
+    state: present
+
+- name: Install ARA from PyPI
+  pip:
+    name: ara
+    state: present
+    executable: /bin/pip
+
+- name: Create ara user
+  user:
+    name: '{{ ara_user }}'
+    home: '{{ ara_home }}'
+    system: true
+    state: present
+
+- name: Get ARA path
+  shell: python -c "import os,ara; print(os.path.dirname(ara.__file__))"
+  changed_when: true
+  check_mode: no
+  register: _ara_location
+
+- set_fact:
+      ara_location: '{{ _ara_location.stdout_lines[0] }}'
+
+- name: Create ARA DB
+  mysql_db:
+    name: '{{ ara_db_db }}'
+    state: present
+  register: _database_created
+
+- name: Create ARA DB user
+  mysql_user:
+    name: '{{ ara_db_user }}'
+    password: '{{ ara_db_password }}'
+    priv: '{{ ara_db_db }}.*:ALL'
+    state: present
+
+- name: Create ara sysconfig
+  copy:
+    content: '{{ ara_sysconfig.content }}'
+    dest: '{{ ara_sysconfig.name }}'
+    force: '{{ ara_sysconfig.overwrite|default(False) }}'
+
+- name: Create systemd unit
+  copy:
+    content: '{{ ara_systemd_unit.content }}'
+    dest: '{{ ara_systemd_unit.name }}'
+  notify:
+      - systemctl daemon-reload
+
+- name: Upload ansible.cfg
+  template:
+    src: ansible.cfg.j2
+    dest: /etc/ansible/ansible.cfg
+
+- name: Start ansible web
+  service:
+    name: '{{ ara_systemd_unit_name }}'
+    state: started
+
+- name: Enable firewalld
+  firewalld:
+    port: '{{ ara_port }}/tcp'
+    zone: public
+    immediate: true
+    permanent: true
+    state: enabled
+#  ignore_errors: true

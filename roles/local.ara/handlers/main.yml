@@ -1,0 +1,7 @@
+- name: systemctl daemon-reload
+  shell: systemctl daemon-reload
+
+- name: restart ara
+  service:
+      name: '{{ ara_systemd_unit_name }}'
+      state: restarted

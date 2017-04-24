@@ -1,0 +1,4 @@
+ara_port: 8080
+
+ara_user: 'ara'
+ara_home: /var/lib/ara

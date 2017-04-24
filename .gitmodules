@@ -1,0 +1,9 @@
+[submodule "roles/geerlingguy.mysql"]
+	path = roles/geerlingguy.mysql
+	url = https://github.com/geerlingguy/ansible-role-mysql
+[submodule "roles/VerosK.nginx"]
+	path = roles/VerosK.nginx
+	url = https://github.com/VerosK/ansible-nginx-base
+[submodule "roles/VerosK.acme-sh"]
+	path = roles/VerosK.acme-sh
+	url = https://github.com/verosk/ansible-acme-sh

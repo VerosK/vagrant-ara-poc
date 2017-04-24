@@ -1,0 +1,35 @@
+
+# ara database
+ara_db_db: ara
+ara_db_user: ara
+ara_db_password: nbusr123
+
+ara_host: "0.0.0.0"
+ara_port: 8080
+ara_user: ara
+ara_home: /var/lib/ara
+ara_bin_manage: /usr/bin/ara-manage
+
+ara_database_dsn:
+   mysql://{{ ara_db_user }}:{{ ara_db_password }}@ara/{{ ara_db_db }}
+
+ara_sysconfig:
+    name: /etc/sysconfig/ara
+    content: |
+        # Run ara on port
+        ARA_HOST={{ ara_host }}
+        ARA_PORT={{ ara_port }}
+        ARA_DATABASE="{{ ara_database_dsn }}"
+        ARA_FLAGS="--no-debug"
+    overwrite: true
+
+ara_systemd_unit_name: ara-web
+ara_systemd_unit:
+    name: /etc/systemd/system/{{ ara_systemd_unit_name }}.service
+    content: |
+        [Service]
+        EnvironmentFile={{ ara_sysconfig.name }}
+        User={{ ara_user }}
+        Type=simple
+        ExecStartPre={{ ara_bin_manage }} db migrate
+        ExecStart={{ ara_bin_manage }} runserver -h $ARA_HOST -p $ARA_PORT $ARA_FLAGS

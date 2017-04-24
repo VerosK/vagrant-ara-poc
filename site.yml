@@ -1,0 +1,51 @@
+---
+- name: Setup EPEL
+  hosts: all
+  tags: common
+  tasks:
+    - name: Disable SELinux for the demo
+      selinux:
+        policy: targeted
+        state: permissive
+
+    - name: Enable EPEL
+      yum:
+          name: epel-release
+          state: present
+
+    - name: Add authorized key
+      authorized_key:
+        user: root
+        key: '{{ demo_ssh_key_public }}'
+        state: present
+
+    - name: Create .ssh
+      file:
+        dest: /home/vagrant/.ssh
+        state: directory
+        owner: vagrant
+        mode: 0700
+
+    - name: Upload SSH key
+      copy:
+        content: '{{ demo_ssh_key_private }}'
+        dest: /home/vagrant/.ssh/id_dsa
+        owner: vagrant
+        mode: 0600
+
+- name: Setup Openstack ARA with requisities
+  hosts: ara
+  roles:
+    - role: geerlingguy.mysql
+    - role: local.ara
+      tags: ara
+
+  tasks:
+    - name: Create inventory
+      # Don't do this in production, please
+      copy:
+        dest: '/etc/ansible/hosts'
+        content: |
+            ara   ansible_host=192.168.49.50 ansible_user=root
+            node1 ansible_host=192.168.49.51 ansible_user=root
+            node2 ansible_host=192.168.49.51 ansible_user=root

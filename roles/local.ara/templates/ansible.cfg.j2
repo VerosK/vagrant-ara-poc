@@ -1,0 +1,16 @@
+# {{  ansible_managed }}
+
+[defaults]
+# callback_plugins configuration is required for the ARA callback
+callback_plugins = {{  ara_location }}/plugins/callbacks
+
+# action_plugins and library configuration is required for
+#    the ara_record and ara_read modules
+action_plugins = {{ ara_location }}/plugins/actions
+library = {{  ara_location }}/plugins/modules
+
+# disable hosts checking - we're in testing env now
+host_key_checking = False
+
+[ara]
+database = {{ ara_database_dsn }}
